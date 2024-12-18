@@ -1,57 +1,61 @@
-#ifndef SISTEMA_ACADEMICO_H
-#define SISTEMA_ACADEMICO_H
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-typedef struct Aluno {
-    int matricula;
-    char *nome;
-    long telefone;
-    struct Aluno *proximo;
-} Aluno;
 
-typedef struct Disciplina {
-    int codigo;
-    char *nome;
-    Aluno *lista_alunos;
-    struct Disciplina *proximo;
-} Disciplina;
+struct aluno {
+	int matricula;
+	char* nome;	
+	long int telefone;
+};
+typedef struct aluno t_aluno;
 
-typedef struct Turma {
-    int numero;
-    Disciplina *lista_disciplinas;
-    struct Turma *proximo;
-} Turma;
+struct disciplina {
+	int codigo;
+	char* nome;
+	t_aluno* alunos;
+	int quantidade_alunos;
+};
+typedef struct disciplina t_disciplina;
 
-Turma *lista_turmas = NULL;
+struct turma {
+	int numero;
+	t_disciplina* disciplinas;
+	int quantidade_disciplinas;
+};
+typedef struct turma t_turma;
 
-// Função para inserir uma nova turma
-void inserir_turma(int numero);
+struct curso {
+	t_turma* turmas;
+	int quantidade_turmas;
+};
+typedef struct curso t_curso;
 
-// Função para inserir uma nova disciplina em uma turma
-void inserir_disciplina(int numero_turma, int codigo, char *nome);
 
-// Função para inserir um novo aluno em uma disciplina
-void inserir_aluno(int codigo_disciplina, int matricula, char *nome, long telefone);
+// FUNÇÕES CONTIDAS NO ARQUIVO principal.c
+void exibir_menu(void);
+int obter_opcao_menu(void);
+void processar_opcao_menu(int opcao, t_curso* curso);
 
-// Função para remover uma turma
-void remover_turma(int numero);
+// FUNÇÕES CONTIDAS NO ARQUIVO sistema_academico.c
+void inserir_turma(t_curso* curso);
+void inserir_disciplina(t_turma* turma, t_curso* curso);
+void inserir_aluno(t_disciplina* disciplina, t_curso* curso);
+void remover_turma(t_curso* curso, t_turma* turma);
+void remover_disciplina(t_turma* turma, t_disciplina* disciplina);
+void remover_aluno(t_disciplina* disciplina, t_aluno* aluno);
+void listar_turmas(t_curso* curso);
+void listar_disciplinas(t_turma* turma);
+void listar_alunos(t_disciplina* disciplina);
+t_turma* obter_turma(t_curso* curso);
+t_disciplina* obter_disciplina(t_turma *turma);
+t_aluno* obter_aluno(t_disciplina* disciplina);
+void liberar_memoria_curso(t_curso* curso);
+void liberar_memoria_turma(t_turma turma);
+void liberar_memoria_disciplina(t_disciplina disciplina);
+void liberar_memoria_aluno(t_aluno aluno);
+int existe_turma(t_curso* curso, int numero);
+int existe_disciplina(t_turma* turma, int codigo);
+int existe_aluno(t_disciplina* disciplina, int matricula);
 
-// Função para remover uma disciplina de uma turma
-void remover_disciplina(int numero_turma, int codigo);
-
-// Função para remover um aluno de uma disciplina
-void remover_aluno(int codigo_disciplina, int matricula);
-
-// Função para listar todas as turmas
-void listar_turmas();
-
-// Função para listar todas as disciplinas de uma turma
-void listar_disciplinas(int numero_turma);
-
-// Função para listar todos os alunos de uma disciplina
-void listar_alunos(int codigo_disciplina);
-
-#endif // SISTEMA_ACADEMICO_H
+// FUNÇÕES CONTIDAS NO ARQUIVO util.c
+void obter_texto(char** texto);

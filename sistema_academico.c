@@ -1,274 +1,358 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "sistema_academico.h"
 
-typedef struct Aluno {
-    int matricula;
-    char *nome;
-    long telefone;
-    struct Aluno *proximo;
-} Aluno;
-
-typedef struct Disciplina {
-    int codigo;
-    char *nome;
-    Aluno *lista_alunos;
-    struct Disciplina *proximo;
-} Disciplina;
-
-typedef struct Turma {
-    int numero;
-    Disciplina *lista_disciplinas;
-    struct Turma *proximo;
-} Turma;
-
-Turma *lista_turmas = NULL;
-
-// Função para inserir uma nova turma
-void inserir_turma(int numero) {
-    Turma *nova_turma = (Turma *)malloc(sizeof(Turma));
-    nova_turma->numero = numero;
-    nova_turma->lista_disciplinas = NULL;
-    nova_turma->proximo = lista_turmas;
-    lista_turmas = nova_turma;
+void exibir_menu(void) {
+    printf("### SISTEMA ACADEMICO 1.0 ###\n");
+    printf("1. Inserir turma\n");
+    printf("2. Inserir disciplina\n");
+    printf("3. Inserir aluno\n");
+    printf("4. Remover turma\n");
+    printf("5. Remover disciplina\n");
+    printf("6. Remover aluno\n");
+    printf("7. Listar turmas\n");
+    printf("8. Listar disciplinas\n");
+    printf("9. Listar alunos\n");
+    printf("0. Sair\n");
+    t_curso curso;
+    curso.quantidade_turmas = 0;
+    curso.turmas = NULL;
+    int opcao = obter_opcao_menu();
+    processar_opcao_menu(opcao, &curso);
 }
 
-// Função para inserir uma nova disciplina em uma turma
-void inserir_disciplina(int numero_turma, int codigo, char *nome) {
-    Turma *turma = lista_turmas;
-    while (turma != NULL && turma->numero != numero_turma) {
-        turma = turma->proximo;
-    }
-    if (turma != NULL) {
-        Disciplina *nova_disciplina = (Disciplina *)malloc(sizeof(Disciplina));
-        nova_disciplina->codigo = codigo;
-        nova_disciplina->nome = strdup(nome);
-        nova_disciplina->lista_alunos = NULL;
-        nova_disciplina->proximo = turma->lista_disciplinas;
-        turma->lista_disciplinas = nova_disciplina;
-    }
+int obter_opcao_menu(void) {
+    int opcao;
+    printf("Informe a opção desejada: ");
+    scanf("%d", &opcao);
+    return opcao;
 }
 
-// Função para inserir um novo aluno em uma disciplina
-void inserir_aluno(int codigo_disciplina, int matricula, char *nome, long telefone) {
-    Turma *turma = lista_turmas;
-    while (turma != NULL) {
-        Disciplina *disciplina = turma->lista_disciplinas;
-        while (disciplina != NULL && disciplina->codigo != codigo_disciplina) {
-            disciplina = disciplina->proximo;
-        }
-        if (disciplina != NULL) {
-            Aluno *novo_aluno = (Aluno *)malloc(sizeof(Aluno));
-            novo_aluno->matricula = matricula;
-            novo_aluno->nome = strdup(nome);
-            novo_aluno->telefone = telefone;
-            novo_aluno->proximo = disciplina->lista_alunos;
-            disciplina->lista_alunos = novo_aluno;
-            return;
-        }
-        turma = turma->proximo;
-    }
-}
+void processar_opcao_menu(int opcao, t_curso* curso) {
+    t_turma* turma;
+    t_disciplina* disciplina;
+    t_aluno* aluno;
 
-// Função para remover uma turma
-void remover_turma(int numero) {
-    Turma *turma_anterior = NULL;
-    Turma *turma_atual = lista_turmas;
-
-    // Procurar a turma a ser removida
-    while (turma_atual != NULL && turma_atual->numero != numero) {
-        turma_anterior = turma_atual;
-        turma_atual = turma_atual->proximo;
-    }
-
-    // Se a turma foi encontrada
-    if (turma_atual != NULL) {
-        // Remover todas as disciplinas da turma
-        Disciplina *disciplina_atual = turma_atual->lista_disciplinas;
-        while (disciplina_atual != NULL) {
-            Disciplina *disciplina_remover = disciplina_atual;
-            disciplina_atual = disciplina_atual->proximo;
-            free(disciplina_remover->nome);
-            free(disciplina_remover);
-        }
-
-        // Remover a turma
-        if (turma_anterior != NULL) {
-            turma_anterior->proximo = turma_atual->proximo;
-        } else {
-            lista_turmas = turma_atual->proximo;
-        }
-        free(turma_atual);
-    }
-}
-
-// Função para remover uma disciplina de uma turma
-void remover_disciplina(int numero_turma, int codigo) {
-    Turma *turma = lista_turmas;
-
-    // Procurar a turma
-    while (turma != NULL && turma->numero != numero_turma) {
-        turma = turma->proximo;
-    }
-
-    // Se a turma foi encontrada
-    if (turma != NULL) {
-        Disciplina *disciplina_anterior = NULL;
-        Disciplina *disciplina_atual = turma->lista_disciplinas;
-
-        // Procurar a disciplina a ser removida
-        while (disciplina_atual != NULL && disciplina_atual->codigo != codigo) {
-            disciplina_anterior = disciplina_atual;
-            disciplina_atual = disciplina_atual->proximo;
-        }
-
-        // Se a disciplina foi encontrada
-        if (disciplina_atual != NULL) {
-            // Remover todos os alunos da disciplina
-            Aluno *aluno_atual = disciplina_atual->lista_alunos;
-            while (aluno_atual != NULL) {
-                Aluno *aluno_remover = aluno_atual;
-                aluno_atual = aluno_atual->proximo;
-                free(aluno_remover->nome);
-                free(aluno_remover);
-            }
-
-            // Remover a disciplina
-            if (disciplina_anterior != NULL) {
-                disciplina_anterior->proximo = disciplina_atual->proximo;
+    while(opcao != 0) {
+     switch (opcao) {
+        case 1:
+            inserir_turma(curso);
+            break;
+        case 2:
+            turma = obter_turma(curso);
+            if (turma != NULL) {
+                inserir_disciplina(turma, curso);
             } else {
-                turma->lista_disciplinas = disciplina_atual->proximo;
+                printf("Turma não encontrada.\n");
             }
-            free(disciplina_atual->nome);
-            free(disciplina_atual);
-        }
-    }
-}
-
-// Função para remover um aluno de uma disciplina
-void remover_aluno(int codigo_disciplina, int matricula) {
-    Turma *turma = lista_turmas;
-
-    // Procurar a turma
-    while (turma != NULL) {
-        Disciplina *disciplina = turma->lista_disciplinas;
-
-        // Procurar a disciplina
-        while (disciplina != NULL && disciplina->codigo != codigo_disciplina) {
-            disciplina = disciplina->proximo;
-        }
-
-        // Se a disciplina foi encontrada
-        if (disciplina != NULL) {
-            Aluno *aluno_anterior = NULL;
-            Aluno *aluno_atual = disciplina->lista_alunos;
-
-            // Procurar o aluno a ser removido
-            while (aluno_atual != NULL && aluno_atual->matricula != matricula) {
-                aluno_anterior = aluno_atual;
-                aluno_atual = aluno_atual->proximo;
-            }
-
-            // Se o aluno foi encontrado
-            if (aluno_atual != NULL) {
-                // Remover o aluno
-                if (aluno_anterior != NULL) {
-                    aluno_anterior->proximo = aluno_atual->proximo;
+            break;
+        case 3:
+            turma = obter_turma(curso);
+            if (turma != NULL) {
+                disciplina = obter_disciplina(turma);
+                if (disciplina != NULL) {
+                    inserir_aluno(disciplina, curso);
                 } else {
-                    disciplina->lista_alunos = aluno_atual->proximo;
+                    printf("Disciplina não encontrada.\n");
                 }
-                free(aluno_atual->nome);
-                free(aluno_atual);
+            } else {
+                printf("Turma não encontrada.\n");
             }
-            return;
-        }
-        turma = turma->proximo;
+            break;
+        case 4:
+            turma = obter_turma(curso);
+            if (turma != NULL) {
+                remover_turma(curso, turma);
+            } else {
+                printf("Turma não encontrada.\n");
+            }
+            break;
+        case 5:
+            turma = obter_turma(curso);
+            if (turma != NULL) {
+                disciplina = obter_disciplina(turma);
+                if (disciplina != NULL) {
+                    remover_disciplina(turma, disciplina);
+                } else {
+                    printf("Disciplina não encontrada.\n");
+                }
+            } else {
+                printf("Turma não encontrada.\n");
+            }
+            break;
+        case 6:
+            turma = obter_turma(curso);
+            if (turma != NULL) {
+                disciplina = obter_disciplina(turma);
+                if (disciplina != NULL) {
+                    aluno = obter_aluno(disciplina);
+                    if (aluno != NULL) {
+                        remover_aluno(disciplina, aluno);
+                    } else {
+                        printf("Aluno não encontrado.\n");
+                    }
+                } else {
+                    printf("Disciplina não encontrada.\n");
+                }
+            } else {
+                printf("Turma não encontrada.\n");
+            }
+            break;
+        case 7:
+            listar_turmas(curso);
+            break;
+        case 8:
+            turma = obter_turma(curso);
+            if (turma != NULL) {
+                listar_disciplinas(turma);
+            } else {
+                printf("Turma não encontrada.\n");
+            }
+            break;
+        case 9:
+            turma = obter_turma(curso);
+            if (turma != NULL) {
+                disciplina = obter_disciplina(turma);
+                if (disciplina != NULL) {
+                    listar_alunos(disciplina);
+                } else {
+                    printf("Disciplina não encontrada.\n");
+                }
+            } else {
+                printf("Turma não encontrada.\n");
+            }
+            break;
+        case 0:
+            printf("Saindo...\n");
+            break;
+        default:
+            printf("Opção inválida.\n");
+            break;
+    }   
     }
 }
 
-// Função para listar todas as turmas
-void listar_turmas() {
-    Turma *turma = lista_turmas;
+void inserir_turma(t_curso* curso) {
+    int numeroDaTurma;
+    t_turma nova_turma;
 
-    // Percorrer todas as turmas
-    while (turma != NULL) {
-        printf("Turma: %d\n", turma->numero);
+    printf("Informe o número da turma: ");
+    scanf("%d", &numeroDaTurma);
 
-        Disciplina *disciplina = turma->lista_disciplinas;
-
-        // Percorrer todas as disciplinas da turma
-        while (disciplina != NULL) {
-            printf("Disciplina: %d\n", disciplina->codigo);
-
-            Aluno *aluno = disciplina->lista_alunos;
-
-            // Percorrer todos os alunos da disciplina
-            while (aluno != NULL) {
-                printf("Aluno: %d\n", aluno->matricula);
-                aluno = aluno->proximo;
-            }
-
-            disciplina = disciplina->proximo;
-        }
-
-        turma = turma->proximo;
+    if (existe_turma(curso, numeroDaTurma)) {
+        printf("Turma já existe.\n");
+        return;
     }
+
+    nova_turma.numero = numeroDaTurma;
+    nova_turma.quantidade_disciplinas = 0;
+    nova_turma.disciplinas = NULL;
+
+    curso->quantidade_turmas++;
+    curso->turmas = (t_turma*) realloc(curso->turmas, curso->quantidade_turmas * sizeof(t_turma));
+    curso->turmas[curso->quantidade_turmas - 1] = nova_turma;
+
+    listar_turmas(curso);
+
+    printf("Turma inserida com sucesso.\n");
 }
 
-// Função para listar todas as disciplinas de uma turma
-void listar_disciplinas(int numero_turma) {
-    Turma *turma = lista_turmas;
+void inserir_disciplina(t_turma* turma, t_curso* curso) {
+    int codigo;
+    int codigoTurma;
+    char* nome;
 
-    // Procurar a turma
-    while (turma != NULL && turma->numero != numero_turma) {
-        turma = turma->proximo;
+    listar_turmas(curso);
+
+    printf("Escolha uma turma: ");
+    scanf("%d", &codigoTurma);
+
+    if (existe_disciplina(turma, codigo)) {
+        printf("Disciplina já existe.\n");
+
+        exibir_menu();
+        return;
     }
 
-    // Se a turma foi encontrada
-    if (turma != NULL) {
-        Disciplina *disciplina = turma->lista_disciplinas;
+    obter_texto(&nome);
 
-        // Percorrer todas as disciplinas da turma
-        while (disciplina != NULL) {
-            printf("Disciplina: %d\n", disciplina->codigo);
+    t_disciplina disciplina;
+    disciplina.codigo = codigo;
+    disciplina.nome = nome;
+    disciplina.quantidade_alunos = 0;
+    disciplina.alunos = NULL;
 
-            Aluno *aluno = disciplina->lista_alunos;
+    turma->quantidade_disciplinas++;
+    turma->disciplinas = (t_disciplina*) realloc(turma->disciplinas, turma->quantidade_disciplinas * sizeof(t_disciplina));
+    turma->disciplinas[turma->quantidade_disciplinas - 1] = disciplina;
+};
 
-            // Percorrer todos os alunos da disciplina
-            while (aluno != NULL) {
-                printf("Aluno: %d\n", aluno->matricula);
-                aluno = aluno->proximo;
+void inserir_aluno(t_disciplina* disciplina, t_curso* curso) {
+    int matricula;
+    char* nome;
+    long int telefone;
+
+    listar_turmas(curso);
+
+    printf("Informe a matricula do aluno: ");
+    scanf("%d", &matricula);
+
+    if (existe_aluno(disciplina, matricula)) {
+        printf("Aluno já existe.\n");
+        return;
+    }
+
+    obter_texto(&nome);
+
+    printf("Informe o telefone do aluno: ");
+    scanf("%ld", &telefone);
+
+    t_aluno aluno;
+    aluno.matricula = matricula;
+    aluno.nome = nome;
+    aluno.telefone = telefone;
+
+    disciplina->quantidade_alunos++;
+    disciplina->alunos = (t_aluno*) realloc(disciplina->alunos, disciplina->quantidade_alunos * sizeof(t_aluno));
+    disciplina->alunos[disciplina->quantidade_alunos - 1] = aluno;
+};
+
+void remover_turma(t_curso* curso, t_turma* turma) {
+    for (int i = 0; i < curso->quantidade_turmas; i++) {
+        if (&curso->turmas[i] == turma) {
+            for (int j = i; j < curso->quantidade_turmas - 1; j++) {
+                curso->turmas[j] = curso->turmas[j + 1];
             }
-
-            disciplina = disciplina->proximo;
+            curso->quantidade_turmas--;
+            curso->turmas = (t_turma*) realloc(curso->turmas, curso->quantidade_turmas * sizeof(t_turma));
+            break;
         }
     }
-}
+};
 
-// Função para listar todos os alunos de uma disciplina
-void listar_alunos(int codigo_disciplina) {
-    Turma *turma = lista_turmas;
-
-    // Procurar a turma
-    while (turma != NULL) {
-        Disciplina *disciplina = turma->lista_disciplinas;
-
-        // Procurar a disciplina
-        while (disciplina != NULL && disciplina->codigo != codigo_disciplina) {
-            disciplina = disciplina->proximo;
-        }
-
-        // Se a disciplina foi encontrada
-        if (disciplina != NULL) {
-            Aluno *aluno = disciplina->lista_alunos;
-
-            // Percorrer todos os alunos da disciplina
-            while (aluno != NULL) {
-                printf("Aluno: %d\n", aluno->matricula);
-                aluno = aluno->proximo;
+void remover_disciplina(t_turma* turma, t_disciplina* disciplina) {
+    for (int i = 0; i < turma->quantidade_disciplinas; i++) {
+        if (&turma->disciplinas[i] == disciplina) {
+            for (int j = i; j < turma->quantidade_disciplinas - 1; j++) {
+                turma->disciplinas[j] = turma->disciplinas[j + 1];
             }
-            return;
+            turma->quantidade_disciplinas--;
+            turma->disciplinas = (t_disciplina*) realloc(turma->disciplinas, turma->quantidade_disciplinas * sizeof(t_disciplina));
+            break;
         }
-        turma = turma->proximo;
     }
-}
+};
+
+void remover_aluno(t_disciplina* disciplina, t_aluno* aluno) {
+    for (int i = 0; i < disciplina->quantidade_alunos; i++) {
+        if (&disciplina->alunos[i] == aluno) {
+            for (int j = i; j < disciplina->quantidade_alunos - 1; j++) {
+                disciplina->alunos[j] = disciplina->alunos[j + 1];
+            }
+            disciplina->quantidade_alunos--;
+            disciplina->alunos = (t_aluno*) realloc(disciplina->alunos, disciplina->quantidade_alunos * sizeof(t_aluno));
+            break;
+        }
+    }
+};
+
+void listar_turmas(t_curso* curso) {
+    for (int i = 0; i < curso->quantidade_turmas; i++) {
+        printf("Turma: %d\n", curso->turmas[i].numero);
+    }
+};
+void listar_disciplinas(t_turma* turma) {
+    for (int i = 0; i < turma->quantidade_disciplinas; i++) {
+        printf("Disciplina: %d\n", turma->disciplinas[i].codigo);
+    }
+};
+void listar_alunos(t_disciplina* disciplina) {
+    for (int i = 0; i < disciplina->quantidade_alunos; i++) {
+        printf("Aluno: %d\n", disciplina->alunos[i].matricula);
+    }
+};
+
+t_turma* obter_turma(t_curso* curso) {
+    int numero;
+    printf("Informe o número da turma: ");
+    scanf("%d", &numero);
+
+    for (int i = 0; i < curso->quantidade_turmas; i++) {
+        if (curso->turmas[i].numero == numero) {
+            return &curso->turmas[i];
+        }
+    }
+    return NULL;
+};
+
+t_disciplina* obter_disciplina(t_turma *turma) {
+    int codigo;
+    printf("Informe o código da disciplina: ");
+    scanf("%d", &codigo);
+
+    for (int i = 0; i < turma->quantidade_disciplinas; i++) {
+        if (turma->disciplinas[i].codigo == codigo) {
+            return &turma->disciplinas[i];
+        }
+    }
+    return NULL;
+};
+
+t_aluno* obter_aluno(t_disciplina* disciplina) {
+    int matricula;
+    printf("Informe a matricula do aluno: ");
+    scanf("%d", &matricula);
+
+    for (int i = 0; i < disciplina->quantidade_alunos; i++) {
+        if (disciplina->alunos[i].matricula == matricula) {
+            return &disciplina->alunos[i];
+        }
+    }
+    return NULL;
+};
+
+void liberar_memoria_curso(t_curso* curso) {
+    free(curso->turmas);
+};
+
+void liberar_memoria_turma(t_turma turma) {
+    free(turma.disciplinas);
+};
+
+void liberar_memoria_disciplina(t_disciplina disciplina) {
+    free(disciplina.nome);
+    free(disciplina.alunos);
+};
+
+void liberar_memoria_aluno(t_aluno aluno) {
+    free(aluno.nome);
+};
+
+int existe_turma(t_curso* curso, int numero) {
+    for (int i = 0; i < curso->quantidade_turmas; i++) {
+        if (curso->turmas[i].numero == numero) {
+            return 1;
+        }
+    }
+    return 0;
+
+};
+
+int existe_disciplina(t_turma* turma, int codigo) {
+    for (int i = 0; i < turma->quantidade_disciplinas; i++) {
+        if (turma->disciplinas[i].codigo == codigo) {
+            return 1;
+        }
+    }
+    return 0;
+};
+
+int existe_aluno(t_disciplina* disciplina, int matricula) {
+    for (int i = 0; i < disciplina->quantidade_alunos; i++) {
+        if (disciplina->alunos[i].matricula == matricula) {
+            return 1;
+        }
+    }
+    return 0;
+};
